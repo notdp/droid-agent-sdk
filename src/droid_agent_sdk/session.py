@@ -25,7 +25,7 @@ class DroidSession:
 
     name: str
     model: str
-    pr_number: str
+    workspace: str = "default"
     cwd: str = field(default_factory=os.getcwd)
     session_id: str | None = None
     transport: FIFOTransport | None = None
@@ -36,7 +36,7 @@ class DroidSession:
         self._process, self.transport = start_daemon(
             name=self.name,
             model=self.model,
-            pr_number=self.pr_number,
+            workspace=self.workspace,
             cwd=self.cwd,
         )
 
@@ -53,7 +53,7 @@ class DroidSession:
         self._process, self.transport = resume_daemon(
             name=self.name,
             session_id=self.session_id,
-            pr_number=self.pr_number,
+            workspace=self.workspace,
             cwd=self.cwd,
         )
 

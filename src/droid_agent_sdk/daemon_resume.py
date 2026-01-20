@@ -2,7 +2,7 @@
 """Daemon for resuming existing session (load_session).
 
 Usage:
-    python -m droid_agent_sdk.daemon_resume <name> <pr_number> <session_id> <cwd> <auto_level>
+    python -m droid_agent_sdk.daemon_resume <name> <workspace> <session_id> <cwd> <auto_level>
 
 Note: No model parameter - load_session restores the original model.
 """
@@ -20,18 +20,18 @@ DROID = Path.home() / ".local" / "bin" / "droid"
 def main():
     if len(sys.argv) < 6:
         print(
-            "Usage: python -m droid_agent_sdk.daemon_resume <name> <pr> <session_id> <cwd> <auto>"
+            "Usage: python -m droid_agent_sdk.daemon_resume <name> <workspace> <session_id> <cwd> <auto>"
         )
         sys.exit(1)
 
     name = sys.argv[1]
-    pr_number = sys.argv[2]
+    workspace = sys.argv[2]
     session_id = sys.argv[3]
     cwd = sys.argv[4]
     auto_level = sys.argv[5]
 
-    fifo = f"/tmp/duo-{pr_number}-{name}"
-    log = f"/tmp/duo-{pr_number}-{name}.log"
+    fifo = f"/tmp/duo-{workspace}-{name}"
+    log = f"/tmp/duo-{workspace}-{name}.log"
 
     log_file = open(log, "a", buffering=1)
     proc = subprocess.Popen(

@@ -2,7 +2,7 @@
 """Daemon for starting new session (initialize_session).
 
 Usage:
-    python -m droid_agent_sdk.daemon_start <name> <model> <pr_number> <cwd> <auto_level>
+    python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto_level>
 """
 
 import json
@@ -18,18 +18,18 @@ DROID = Path.home() / ".local" / "bin" / "droid"
 def main():
     if len(sys.argv) < 6:
         print(
-            "Usage: python -m droid_agent_sdk.daemon_start <name> <model> <pr> <cwd> <auto>"
+            "Usage: python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto>"
         )
         sys.exit(1)
 
     name = sys.argv[1]
     model = sys.argv[2]
-    pr_number = sys.argv[3]
+    workspace = sys.argv[3]
     cwd = sys.argv[4]
     auto_level = sys.argv[5]
 
-    fifo = f"/tmp/duo-{pr_number}-{name}"
-    log = f"/tmp/duo-{pr_number}-{name}.log"
+    fifo = f"/tmp/duo-{workspace}-{name}"
+    log = f"/tmp/duo-{workspace}-{name}.log"
 
     log_file = open(log, "a", buffering=1)
     proc = subprocess.Popen(

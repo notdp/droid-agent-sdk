@@ -27,10 +27,10 @@ class FIFOTransport:
     _process: subprocess.Popen | None = None
 
     @classmethod
-    def create(cls, name: str, pr_number: str) -> FIFOTransport:
+    def create(cls, name: str, workspace: str = "default") -> FIFOTransport:
         """Create a new FIFO transport."""
-        fifo_path = Path(f"/tmp/duo-{pr_number}-{name}")
-        log_path = Path(f"/tmp/duo-{pr_number}-{name}.log")
+        fifo_path = Path(f"/tmp/duo-{workspace}-{name}")
+        log_path = Path(f"/tmp/duo-{workspace}-{name}.log")
 
         # Clean up old FIFO
         if fifo_path.exists():
@@ -131,12 +131,12 @@ class FIFOTransport:
 def start_daemon(
     name: str,
     model: str,
-    pr_number: str,
-    cwd: str,
+    workspace: str = "default",
+    cwd: str = ".",
     auto_level: str = "high",
 ) -> tuple[subprocess.Popen, FIFOTransport]:
     """Start a new Droid session (initialize_session)."""
-    transport = FIFOTransport.create(name, pr_number)
+    transport = FIFOTransport.create(name, workspace)
 
     daemon_proc = subprocess.Popen(
         [
@@ -145,7 +145,7 @@ def start_daemon(
             "droid_agent_sdk.daemon_start",
             name,
             model,
-            pr_number,
+            workspace,
             cwd,
             auto_level,
         ],
@@ -162,12 +162,12 @@ def start_daemon(
 def resume_daemon(
     name: str,
     session_id: str,
-    pr_number: str,
-    cwd: str,
+    workspace: str = "default",
+    cwd: str = ".",
     auto_level: str = "high",
 ) -> tuple[subprocess.Popen, FIFOTransport]:
     """Resume an existing Droid session (load_session)."""
-    transport = FIFOTransport.create(name, pr_number)
+    transport = FIFOTransport.create(name, workspace)
 
     daemon_proc = subprocess.Popen(
         [
@@ -175,7 +175,7 @@ def resume_daemon(
             "-m",
             "droid_agent_sdk.daemon_resume",
             name,
-            pr_number,
+            workspace,
             session_id,
             cwd,
             auto_level,
