@@ -27,6 +27,9 @@ class DroidSession:
     model: str
     workspace: str = "default"
     cwd: str = field(default_factory=os.getcwd)
+    auto_level: str = "high"
+    reasoning_effort: str = "high"
+    extra_env: dict[str, str] | None = None
     session_id: str | None = None
     transport: FIFOTransport | None = None
     _process: subprocess.Popen | None = None
@@ -38,6 +41,9 @@ class DroidSession:
             model=self.model,
             workspace=self.workspace,
             cwd=self.cwd,
+            auto_level=self.auto_level,
+            reasoning_effort=self.reasoning_effort,
+            extra_env=self.extra_env,
         )
 
         self.session_id = await self.transport.wait_for_session_id()
@@ -47,7 +53,10 @@ class DroidSession:
         return self.session_id
 
     async def resume(self, session_id: str) -> None:
-        """Resume an existing session."""
+        """Resume an existing session.
+        
+        Note: No model/auto/reasoning parameters - load_session restores original settings.
+        """
         self.session_id = session_id
 
         self._process, self.transport = resume_daemon(
@@ -55,6 +64,7 @@ class DroidSession:
             session_id=self.session_id,
             workspace=self.workspace,
             cwd=self.cwd,
+            extra_env=self.extra_env,
         )
 
         await asyncio.sleep(2)
