@@ -10,6 +10,7 @@ import os
 import subprocess
 import sys
 import time
+import threading
 from pathlib import Path
 
 DROID = Path.home() / ".local" / "bin" / "droid"
@@ -50,7 +51,7 @@ def main():
             "--allow-background-processes",
         ],
         stdin=subprocess.PIPE,
-        stdout=log_file,
+        stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
         bufsize=1,
@@ -78,17 +79,48 @@ def main():
     proc.stdin.write(json.dumps(init_req) + "\n")
     proc.stdin.flush()
 
-    # Main loop: FIFO -> droid stdin
-    while True:
+    # Read stdout until session is ready
+    for line in proc.stdout:
+        log_file.write(line)
+        log_file.flush()
+        if '"sessionId"' in line:
+            break
+
+    # Background thread: continue reading stdout -> log
+    def stdout_to_log():
         try:
-            with open(fifo, "r") as f:
-                for line in f:
-                    if line.strip():
-                        proc.stdin.write(line)
-                        proc.stdin.flush()
+            for line in proc.stdout:
+                log_file.write(line)
+                log_file.flush()
         except Exception:
-            time.sleep(0.1)
-            continue
+            pass
+
+    log_thread = threading.Thread(target=stdout_to_log, daemon=True)
+    log_thread.start()
+
+    # Main loop: FIFO -> droid stdin
+    try:
+        while True:
+            if proc.poll() is not None:
+                break
+            try:
+                with open(fifo, "r") as f:
+                    for line in f:
+                        if line.strip():
+                            proc.stdin.write(line)
+                            proc.stdin.flush()
+            except Exception:
+                time.sleep(0.1)
+                continue
+    finally:
+        log_file.close()
+        if proc.poll() is None:
+            proc.terminate()
+            proc.wait(timeout=5)
+        try:
+            os.remove(fifo)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

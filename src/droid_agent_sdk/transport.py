@@ -135,9 +135,14 @@ def start_daemon(
     cwd: str = ".",
     auto_level: str = "high",
     reasoning_effort: str = "high",
+    extra_env: dict[str, str] | None = None,
 ) -> tuple[subprocess.Popen, FIFOTransport]:
     """Start a new Droid session (initialize_session)."""
     transport = FIFOTransport.create(name, workspace)
+
+    env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
 
     daemon_proc = subprocess.Popen(
         [
@@ -154,7 +159,7 @@ def start_daemon(
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
-        env=os.environ.copy(),
+        env=env,
     )
 
     transport.pid = daemon_proc.pid
@@ -166,10 +171,17 @@ def resume_daemon(
     session_id: str,
     workspace: str = "default",
     cwd: str = ".",
-    auto_level: str = "high",
+    extra_env: dict[str, str] | None = None,
 ) -> tuple[subprocess.Popen, FIFOTransport]:
-    """Resume an existing Droid session (load_session)."""
+    """Resume an existing Droid session (load_session).
+    
+    Note: No model/auto/reasoning parameters - load_session restores original settings.
+    """
     transport = FIFOTransport.create(name, workspace)
+
+    env = os.environ.copy()
+    if extra_env:
+        env.update(extra_env)
 
     daemon_proc = subprocess.Popen(
         [
@@ -180,12 +192,11 @@ def resume_daemon(
             workspace,
             session_id,
             cwd,
-            auto_level,
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True,
-        env=os.environ.copy(),
+        env=env,
     )
 
     transport.pid = daemon_proc.pid
