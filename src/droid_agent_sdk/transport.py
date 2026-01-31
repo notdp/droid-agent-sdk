@@ -134,6 +134,7 @@ def start_daemon(
     workspace: str = "default",
     cwd: str = ".",
     auto_level: str = "high",
+    reasoning_effort: str = "high",
 ) -> tuple[subprocess.Popen, FIFOTransport]:
     """Start a new Droid session (initialize_session)."""
     transport = FIFOTransport.create(name, workspace)
@@ -148,6 +149,7 @@ def start_daemon(
             workspace,
             cwd,
             auto_level,
+            reasoning_effort,
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

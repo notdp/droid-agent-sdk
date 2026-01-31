@@ -2,7 +2,7 @@
 """Daemon for starting new session (initialize_session).
 
 Usage:
-    python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto_level>
+    python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto_level> [reasoning_effort]
 """
 
 import json
@@ -18,7 +18,7 @@ DROID = Path.home() / ".local" / "bin" / "droid"
 def main():
     if len(sys.argv) < 6:
         print(
-            "Usage: python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto>"
+            "Usage: python -m droid_agent_sdk.daemon_start <name> <model> <workspace> <cwd> <auto> [reasoning]"
         )
         sys.exit(1)
 
@@ -27,6 +27,7 @@ def main():
     workspace = sys.argv[3]
     cwd = sys.argv[4]
     auto_level = sys.argv[5]
+    reasoning_effort = sys.argv[6] if len(sys.argv) > 6 else "high"
 
     fifo = f"/tmp/duo-{workspace}-{name}"
     log = f"/tmp/duo-{workspace}-{name}.log"
@@ -40,10 +41,12 @@ def main():
             "stream-jsonrpc",
             "--output-format",
             "stream-jsonrpc",
-            "-m",
+            "--model",
             model,
             "--auto",
             auto_level,
+            "--reasoning-effort",
+            reasoning_effort,
             "--allow-background-processes",
         ],
         stdin=subprocess.PIPE,
@@ -56,12 +59,20 @@ def main():
     )
 
     # Send initialize_session
+    # Note: CLI args don't work in stream-jsonrpc mode (droid bug),
+    # so we pass params as workaround
     init_req = {
         "jsonrpc": "2.0",
         "type": "request",
         "factoryApiVersion": "1.0.0",
         "method": "droid.initialize_session",
-        "params": {"machineId": os.uname().nodename, "cwd": cwd},
+        "params": {
+            "machineId": os.uname().nodename,
+            "cwd": cwd,
+            "modelId": model,
+            "autonomyLevel": f"auto-{auto_level}",
+            "reasoningEffort": reasoning_effort,
+        },
         "id": "init",
     }
     proc.stdin.write(json.dumps(init_req) + "\n")
